@@ -123,13 +123,14 @@ def main():
         while status not in ['completed', 'error']:
             response = get_transcription(transcription_id)
             status = response['status']
-            log('{} ({} sec)'.format(status, count))
+            log('\r[{} sec] {}'.format(count, status), False)
             time.sleep(1)
             count += 1
+        log()
         if status == 'completed':
-            print('transcribe --show {}'.format(transcription_id))
+            log('transcribe --show {}'.format(transcription_id))
         else:
-            print(response)
+            log(response)
 
 if __name__ == '__main__':
     main()
