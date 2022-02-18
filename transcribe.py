@@ -88,7 +88,7 @@ def get_speakers(transcription_id, speakers = None):
     result = []
     for utterance in data['utterances']:
         utterance['start'] = timedelta(milliseconds=utterance['start'])
-        utterance['speaker'] = speaker_map[utterance['speaker']]
+        utterance['speaker'] = speaker_map.get(utterance['speaker'], 'Unknown')
         result.append('{start} Speaker {speaker}: {text}'.format(**utterance))
     return '\n'.join(result)
 
@@ -116,7 +116,7 @@ def main():
         file_id = upload_file_to_api(args.transcribe)
         log('Starting transcription...')
         transcription_id = initiate_transcription(file_id)
-        print('transcribe --show {}'.format(transcription_id))
+        log('transcribe --show {}'.format(transcription_id))
         status = None
         count = 1
         log('Waiting...')
@@ -128,7 +128,14 @@ def main():
             count += 1
         log()
         if status == 'completed':
-            log('transcribe --show {}'.format(transcription_id))
+            if args.format == 'srt':
+                print(get_transcription_srt(transcription_id))
+            elif args.format == 'json':
+                print(get_transcription(transcription_id))
+            elif args.format == 'text':
+                print(get_transcription(transcription_id)['text'])
+            else:
+                log('transcribe --show {}'.format(transcription_id))
         else:
             log(response)
 
