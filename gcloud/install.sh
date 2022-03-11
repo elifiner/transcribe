@@ -11,5 +11,8 @@ gcloud iam service-accounts keys create key.json \
 gcloud projects add-iam-policy-binding ${PROJECT_ID} \
       --member serviceAccount:my-stt-sa@${PROJECT_ID}.iam.gserviceaccount.com \
       --role roles/storage.objectAdmin
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+      --member serviceAccount:my-stt-sa@${PROJECT_ID}.iam.gserviceaccount.com \
+      --role roles/cloudtranslate.user
 export GOOGLE_APPLICATION_CREDENTIALS=key.json
 pip install -r requirements.txt
