@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import re
@@ -91,33 +91,6 @@ def break_sentences(subs, alternative):
             firstword = False
     return subs
 
-def remove_profanity(s):
-    s = re.sub(r'\bfuck', 'f***', s)
-    return s
-
-def translate_lines(lines, from_lang, to_lang):
-    client = translate.TranslationServiceClient()
-    location = 'global'
-    parent = f'projects/{os.environ["PROJECT_ID"]}/locations/{location}'
-    response = client.translate_text(
-        request={
-            'parent': parent,
-            'contents': lines,
-            'mime_type': 'text/plain',
-            'source_language_code': from_lang,
-            'target_language_code': to_lang,
-        }
-    )
-    return [remove_profanity(t.translated_text) for t in response.translations]
-
-def translate_subs(subs, source_lang, target_lang):
-    newsubs = []
-    lines = [s.content for s in subs]
-    translated_lines = translate_lines(lines, source_lang, target_lang)
-    for sub, line in zip(subs, translated_lines):
-        newsubs.append(srt.Subtitle(index=sub.index, start=sub.start, end=sub.end, content=line))
-    return newsubs
-
 def write_srt(out_file, subs):
     srt_file = out_file
     f = open(srt_file, 'w')
@@ -129,7 +102,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(dest='filename', nargs='?', metavar='FILE', help='transcribe an audio file')
     parser.add_argument('--language', '-l', dest='source_lang', default='en-US', metavar='LANG', help='source language (e.g. ru-RU)')
-    parser.add_argument('--translate', '-t', dest='target_lang', default='en-US', metavar='LANG', help='target language (e.g. en-US)')
     args = parser.parse_args()
     if (not args.filename):
         parser.print_help()
@@ -146,10 +118,10 @@ def main():
     os.unlink(audio_filename)
     log('Transcribing...')
     subs = transcribe('gs://{}/{}'.format(BUCKET_NAME, audio_filename), args.source_lang)
-    log('Translating...')
-    translated_subs = translate_subs(subs, args.source_lang, args.target_lang)
-    log('Writing subs...')
-    write_srt(base_filename + '.srt', translated_subs)
+    # log('Translating...')
+    # translated_subs = translate_subs(subs, args.source_lang, args.target_lang)
+    # log('Writing subs...')
+    write_srt(base_filename + '.srt', subs)
     log(base_filename + '.srt')
 
 if __name__ == '__main__':
