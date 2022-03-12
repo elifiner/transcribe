@@ -1,2 +1,6 @@
 key.json
+.vscode
 *.flac
+*.aac
+*.mkv
+*.srt
