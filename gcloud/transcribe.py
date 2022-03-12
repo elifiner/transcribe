@@ -4,16 +4,21 @@ import os
 import re
 import sys
 import srt
+import time
 import argparse
 from tqdm.std import tqdm
 from dotenv import load_dotenv
 from google.cloud import storage
 from google.cloud import speech_v1 as speech
 from google.cloud import translate
+from google.api_core import operations_v1 as operations
 
 KEY_FILE = 'key.json'
 BUCKET_NAME = 'transcribe-audio-upload'
 MAX_CHARS = 40
+
+storage.blob._DEFAULT_CHUNKSIZE = 2097152 # 1024 * 1024 = 1 MB
+storage.blob._MAX_MULTIPART_SIZE = 2097152 # 1 MB
 
 load_dotenv()
 
@@ -46,11 +51,14 @@ def transcribe(gc_url, language):
         audio_channel_count=2,
     )
     operation = client.long_running_recognize(config=config, audio=audio)
+    while not operation.done():
+        log('.', False)
+        time.sleep(1)
+    log()
     response = operation.result()
     subs = []
     for result in response.results:
         subs = break_sentences(subs, result.alternatives[0])
-    print('Transcribing finished')
     return subs
 
 def break_sentences(subs, alternative):
@@ -130,8 +138,8 @@ def main():
     base_filename, _ = os.path.splitext(args.filename)
     audio_filename = base_filename + '.flac'
     log('Extracing audio...')
-    os.system('ffmpeg -y -i {} -vn -acodec copy {}'.format(args.filename, base_filename + '.aac'))
-    os.system('ffmpeg -y -i {} -sample_fmt s16 -ar 8000 {}'.format(base_filename + '.aac', audio_filename))
+    os.system('ffmpeg -y -i "{}" -vn -acodec copy "{}"'.format(args.filename, base_filename + '.aac'))
+    os.system('ffmpeg -y -i "{}" -sample_fmt s16 -ar 8000 "{}"'.format(base_filename + '.aac', audio_filename))
     os.unlink(base_filename + '.aac')
     log('Uploading...')
     upload_to_bucket(audio_filename, audio_filename, BUCKET_NAME)
@@ -142,6 +150,7 @@ def main():
     translated_subs = translate_subs(subs, args.source_lang, args.target_lang)
     log('Writing subs...')
     write_srt(base_filename + '.srt', translated_subs)
+    log(base_filename + '.srt')
 
 if __name__ == '__main__':
     main()
