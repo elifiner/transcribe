@@ -64,7 +64,7 @@ def get_transcription(transcription_id):
     return response.json()
 
 def get_transcription_srt(transcription_id):
-    endpoint = get_transcription_endpoint(transcription_id) + '/srt'
+    endpoint = get_transcription_endpoint(transcription_id) + '/srt?chars_per_caption=48'
     headers = {'authorization': config.ASSEMBLYAI_KEY}
     response = requests.get(endpoint, headers=headers)
     return response.text

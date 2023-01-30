@@ -1,5 +1,0 @@
-google-cloud-speech==2.13.1
-google-cloud-storage==2.1.0
-google-cloud-translate==3.7.2
-tqdm==4.63.0
-python-dotenv==0.19.2
